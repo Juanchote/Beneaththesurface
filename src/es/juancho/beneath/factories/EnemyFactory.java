@@ -39,7 +39,6 @@ public class EnemyFactory {
             @Override
             public void run() {
                 createEnemy(enemyJson, position, movePatternsObject);
-                System.out.println(TAG + "- created Enemy => pos =>" + position);
             }
         },0,interval,(int) count);
     }

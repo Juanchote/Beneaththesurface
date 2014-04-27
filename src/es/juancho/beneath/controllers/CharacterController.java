@@ -1,6 +1,7 @@
 package es.juancho.beneath.controllers;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
@@ -8,6 +9,8 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
+import com.badlogic.gdx.utils.Json;
+import com.badlogic.gdx.utils.ObjectMap;
 import es.juancho.beneath.BeneathMain;
 import es.juancho.beneath.classes.Bullet;
 import es.juancho.beneath.classes.CategoryGroup;
@@ -27,24 +30,28 @@ public class CharacterController {
     private PolygonShape boxShape;
     private Vector2 position;
 
-    private String bulletJsonString = "data/json/player_bullet_basic.json";
+    private String bulletJsonString;
     private boolean attack = false;
     private float attackTime = 0.2f;
     private float attackDelta= attackTime;
+    private Sound attackSound;
 
     private WorldController worldController;
     private float unitScale = BeneathMain.getScale();
 
     private static CharacterController INSTANCE;
 
-    private CharacterController(Vector2 position, Texture texture, WorldController worldController) {
+    private CharacterController(Vector2 position, String url) {
         this.position = new Vector2(position);
-        this.texture = texture;
+        Json json = new Json();
+        ObjectMap objectMap = json.fromJson(ObjectMap.class, Gdx.files.internal(url));
+        bulletJsonString = objectMap.get("bullet").toString();
+        texture = new Texture(objectMap.get("texture").toString());
+
         sprite = new Sprite(texture);
-        //sprite.rotate90(true);
         sprite.rotate(270);
 
-        this.worldController = worldController;
+        this.worldController = WorldController.getInstance();
 
         bodyDef = new BodyDef();
         bodyDef.type = BodyDef.BodyType.DynamicBody;
@@ -65,12 +72,14 @@ public class CharacterController {
         fixtureDef.filter.categoryBits = CategoryGroup.CHARACTER;
 
         body.createFixture(fixtureDef);
+
+        attackSound = (Sound) AssetManagerController.getInstance().get("data/sounds/lasers/shot1.ogg",Sound.class);
         System.out.println(TAG + "- set Player bit: " + fixtureDef.filter.categoryBits);
     }
 
-    public static CharacterController getInstance(Vector2 position,Texture texture, WorldController worldController) {
+    public static CharacterController getInstance(Vector2 position, String url) {
         if (INSTANCE == null) {
-            INSTANCE = new CharacterController(position, texture, worldController);
+            INSTANCE = new CharacterController(position, url);
         }
 
         return INSTANCE;
@@ -110,6 +119,7 @@ public class CharacterController {
             attackDelta = attackTime;
 
             if(attack) {
+                attackSound.play();
                 System.out.println(TAG + "- Creating Bullet..");
                 Bullet bulletRight = new Bullet(bulletJsonString, new Vector2(position.x + sprite.getWidth() + 1, position.y));
                 Bullet bulletLeft = new Bullet(bulletJsonString, new Vector2(position.x + sprite.getWidth() + 1, position.y + sprite.getWidth() - 20));
@@ -134,5 +144,9 @@ public class CharacterController {
 
     public void beginContact(Contact contact) {
 
+    }
+
+    public void dispose() {
+        texture.dispose();
     }
 }

@@ -5,10 +5,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.physics.box2d.Body;
-import com.badlogic.gdx.physics.box2d.BodyDef;
-import com.badlogic.gdx.physics.box2d.FixtureDef;
-import com.badlogic.gdx.physics.box2d.PolygonShape;
+import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
@@ -65,7 +62,6 @@ public class Enemy {
         }
 
         public Vector2 parseMovement() {
-            //System.out.println(TAG + "- parsingMovement.." + "type: " + direction + " delta: " + patternDelta);
             Vector2 velocity = new Vector2();
             if (direction.equals("front")) {
                 velocity.set(-MAX_SPEED,0);
@@ -149,6 +145,7 @@ public class Enemy {
             sprite.draw(spriteBatch);
 
             movementHandler();
+            attackHandler();
             deathHandler();
         }else{
             WorldController.getInstance().addEnemyForDestroy(this);
@@ -172,6 +169,17 @@ public class Enemy {
             }
         }
         patternDelta += Gdx.graphics.getDeltaTime();
+    }
+
+    private void attackHandler() {
+        RayCastCallback rayCastCallback = null;
+        Vector2 dest = new Vector2(position);
+        dest.set(dest.x - 300,dest.y);
+        WorldController.getInstance().getWorld().rayCast(rayCastCallback,position,dest);
+
+        if (rayCastCallback != null) {
+            System.out.println(TAG + "- raycasthit");
+        }
     }
 
     public void getDamage(float damage) {

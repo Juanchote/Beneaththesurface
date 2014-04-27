@@ -4,7 +4,6 @@ import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL10;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -13,10 +12,7 @@ import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.World;
 import es.juancho.beneath.Interfaces.PlatformResolver;
 import es.juancho.beneath.classes.Bullet;
-import es.juancho.beneath.controllers.CameraController;
-import es.juancho.beneath.controllers.CharacterController;
-import es.juancho.beneath.controllers.CollisionListener;
-import es.juancho.beneath.controllers.WorldController;
+import es.juancho.beneath.controllers.*;
 import es.juancho.beneath.factories.EnemyFactory;
 
 import java.util.ArrayList;
@@ -32,6 +28,8 @@ public class BeneathMain implements ApplicationListener {
     private CharacterController characterController;
     private CollisionListener contactListener;
     private EnemyFactory enemyFactory;
+    private AssetManagerController assetManagerController;
+    private LevelController levelController;
 
     private static ArrayList<Bullet> bullets;
 
@@ -40,7 +38,7 @@ public class BeneathMain implements ApplicationListener {
 	private SpriteBatch spriteBatch;
     private ShapeRenderer shapeRenderer;
     private Box2DDebugRenderer box2DDebugRenderer;
-    private boolean debugState = true;
+    private boolean debugState = false;
 
     float w;
     float h;
@@ -61,64 +59,71 @@ public class BeneathMain implements ApplicationListener {
 
         cameraController = CameraController.getInstance();
         worldController = WorldController.getInstance();
-        world = worldController.getWorld();
-        characterController = CharacterController.getInstance(startingPosition,new Texture(Gdx.files.internal("data/sprites/ships/player_ship_basic.png")),worldController);
+        assetManagerController = AssetManagerController.getInstance();
         enemyFactory = EnemyFactory.getInstance();
+        levelController = LevelController.getInstance();
+
+        world = worldController.getWorld();
+
+        while(!assetManagerController.update());
+
+        characterController = CharacterController.getInstance(startingPosition, "data/json/player_basic_ship.json");
 
         platformResolver.setCharacterController(characterController);
         Gdx.input.setInputProcessor(platformResolver.getInputManager());
         contactListener = new CollisionListener();
 
-        //camera = cameraController.getCamera();
+        camera = cameraController.getCamera();
         System.out.println(TAG + "-  setting camera position..");
-        camera = new OrthographicCamera(w,h);
-        camera.position.set(w / 2, h / 2, 0);
+
         System.out.println(TAG + "- set camera.");
 		spriteBatch = new SpriteBatch();
         shapeRenderer = new ShapeRenderer();
         box2DDebugRenderer = new Box2DDebugRenderer();
         bitmapFont = new BitmapFont();
 
-        Vector2 enemyPos = new Vector2(w, h / 4);
-        Vector2 enemyPosR = new Vector2(w, 3 * h / 4);
-
-        enemyFactory.createPattern("data/json/enemyFactoryPatterns/basic_front_left.json","data/json/enemy_basic_ship.json", enemyPos);
-        enemyFactory.createPattern("data/json/enemyFactoryPatterns/basic_front_right.json","data/json/enemy_basic_ship.json", enemyPosR);
-
-
         world.setContactListener(contactListener);
+
+        levelController.startLevel();
 	}
 
 	@Override
 	public void dispose() {
 		spriteBatch.dispose();
         worldController.dispose();
+        assetManagerController.dispose();
+        characterController.dispose();
 	}
 
 	@Override
 	public void render() {		
 		Gdx.gl.glClearColor(0, 0, 0, 1);
 		Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
-		
-		spriteBatch.setProjectionMatrix(camera.combined);
-        camera.update();
 
-        if (debugState) {
-            box2DDebugRenderer.render(world, camera.combined);
-            characterController.shapeRender(shapeRenderer);
-            cameraController.shapeRender();
-        }
+        spriteBatch.setProjectionMatrix(camera.combined);
 
-        platformResolver.inputHandler();
-        worldController.render();
+        if (!assetManagerController.update()) {
 
-        spriteBatch.begin();
+        }else {
+            camera.update();
+
+            if (debugState) {
+                box2DDebugRenderer.render(world, camera.combined);
+                characterController.shapeRender(shapeRenderer);
+                cameraController.shapeRender();
+            }
+
+            platformResolver.inputHandler();
+            worldController.render();
+
+            spriteBatch.begin();
             characterController.render(spriteBatch);
             enemyFactory.render(spriteBatch);
-        for(Bullet bullet: bullets) {
-            bullet.render(spriteBatch);
+            for(Bullet bullet: bullets) {
+                bullet.render(spriteBatch);
+            }
+            spriteBatch.end();
         }
-        spriteBatch.end();
 	}
 
 	@Override
