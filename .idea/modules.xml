@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/BeneathTheSurface.iml" filepath="$PROJECT_DIR$/BeneathTheSurface.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../BeneathTheSurface-android/BeneathTheSurface-Android.iml" filepath="$PROJECT_DIR$/../BeneathTheSurface-android/BeneathTheSurface-Android.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../BeneathTheSurface-desktop/BeneathTheSurface-desktop.iml" filepath="$PROJECT_DIR$/../BeneathTheSurface-desktop/BeneathTheSurface-desktop.iml" />
+    </modules>
+  </component>
+</project>
+
