@@ -11,6 +11,7 @@ import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.ObjectMap;
 import es.juancho.beneath.BeneathMain;
+import es.juancho.beneath.controllers.LevelController;
 import es.juancho.beneath.controllers.WorldController;
 
 import java.util.ArrayList;
@@ -70,7 +71,7 @@ public class Enemy {
             }else if(direction.equals("right")) {
                 velocity.set(0,MAX_SPEED);
             }
-
+            velocity.set(velocity.x + 12 * LevelController.getLevelMovement(), velocity.y);
             return velocity;
         }
 

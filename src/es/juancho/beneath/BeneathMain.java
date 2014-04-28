@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.utils.Timer;
 import es.juancho.beneath.Interfaces.PlatformResolver;
 import es.juancho.beneath.classes.Bullet;
 import es.juancho.beneath.controllers.*;
@@ -53,7 +54,6 @@ public class BeneathMain implements ApplicationListener {
 
         w = Gdx.graphics.getWidth();
         h = Gdx.graphics.getHeight();
-        startingPosition = new Vector2(w / 6, h / 2);
 
         System.out.println(TAG + "- setting graphics properties: width:" + w + " height: " + h);
 
@@ -67,16 +67,15 @@ public class BeneathMain implements ApplicationListener {
 
         while(!assetManagerController.update());
 
-        characterController = CharacterController.getInstance(startingPosition, "data/json/player_basic_ship.json");
+        characterController = CharacterController.getInstance();
 
         platformResolver.setCharacterController(characterController);
         Gdx.input.setInputProcessor(platformResolver.getInputManager());
         contactListener = new CollisionListener();
 
         camera = cameraController.getCamera();
-        System.out.println(TAG + "-  setting camera position..");
-
         System.out.println(TAG + "- set camera.");
+
 		spriteBatch = new SpriteBatch();
         shapeRenderer = new ShapeRenderer();
         box2DDebugRenderer = new Box2DDebugRenderer();
@@ -84,8 +83,8 @@ public class BeneathMain implements ApplicationListener {
 
         world.setContactListener(contactListener);
 
-        levelController.startLevel();
-	}
+        levelController.startLevel("data/json/levels/level1.json");
+    }
 
 	@Override
 	public void dispose() {
@@ -113,10 +112,12 @@ public class BeneathMain implements ApplicationListener {
                 cameraController.shapeRender();
             }
 
+            cameraController.cameraControl();
             platformResolver.inputHandler();
             worldController.render();
 
             spriteBatch.begin();
+            levelController.render(spriteBatch);
             characterController.render(spriteBatch);
             enemyFactory.render(spriteBatch);
             for(Bullet bullet: bullets) {
@@ -132,10 +133,12 @@ public class BeneathMain implements ApplicationListener {
 
 	@Override
 	public void pause() {
-	}
+        Timer.instance().stop();
+    }
 
 	@Override
 	public void resume() {
+        Timer.instance().start();
 	}
 
     public static float getScale() {

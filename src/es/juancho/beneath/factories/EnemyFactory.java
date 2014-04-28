@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.*;
 import es.juancho.beneath.classes.Enemy;
+import es.juancho.beneath.controllers.CameraController;
 
 import java.util.ArrayList;
 
@@ -26,13 +27,14 @@ public class EnemyFactory {
         return INSTANCE;
     }
 
-    public void createPattern(String patternJson, final String enemyJson, final Vector2 position) {
+    public void createPattern(String patternJson,final int time, final String enemyJson, final Vector2 position) {
         System.out.println(TAG + "- Entering pattern creation..");
         Json json = new Json();
         final ObjectMap objectMap = json.fromJson(ObjectMap.class, Gdx.files.internal(patternJson));
         float count = Float.parseFloat(objectMap.get("count").toString());
         float interval = Float.parseFloat(objectMap.get("interval").toString());
         final Array<JsonValue> movePatternsObject = (Array) objectMap.get("movePatterns");
+        System.out.println(TAG + "- parsed Json => count: " + count-- + " interval: " + interval);
 
         Timer timer = Timer.instance();
         timer.scheduleTask(new Timer.Task() {
@@ -40,12 +42,13 @@ public class EnemyFactory {
             public void run() {
                 createEnemy(enemyJson, position, movePatternsObject);
             }
-        },0,interval,(int) count);
+        },time, interval,(int) count);
     }
 
     public void createEnemy(String url, Vector2 position, Array<JsonValue> movePatternsObject) {
-        Enemy enemy = new Enemy(url, position, movePatternsObject);
+        Enemy enemy = new Enemy(url, CameraController.getInstance().calculateRelativePosition(position), movePatternsObject);
         enemies.add(enemy);
+        System.out.println(TAG + "- enemy created. total => " + enemies.size());
     }
 
     public void destroyEnemy(Enemy enemy) {
@@ -59,10 +62,21 @@ public class EnemyFactory {
     }
 
     public static ArrayList<Enemy> getEnemies() {
+
         return enemies;
     }
 
     public static int getEnemyCount() {
+
         return enemies.size();
+    }
+
+    public void restartLevel() {
+        Timer.instance().clear();
+
+        for (Enemy enemy : enemies) {
+            enemy.setForDestroy();
+        }
+        enemies.clear();
     }
 }

@@ -3,6 +3,7 @@ package es.juancho.beneath.controllers;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -15,9 +16,6 @@ import es.juancho.beneath.BeneathMain;
 import es.juancho.beneath.classes.Bullet;
 import es.juancho.beneath.classes.CategoryGroup;
 
-/**
- * Created by Juanma on 26/04/2014.
- */
 public class CharacterController {
 
     private final String TAG = "CHARACTER";
@@ -29,19 +27,28 @@ public class CharacterController {
     private Body body;
     private PolygonShape boxShape;
     private Vector2 position;
+    private float levelMovement;
+
 
     private String bulletJsonString;
     private boolean attack = false;
     private float attackTime = 0.2f;
-    private float attackDelta= attackTime;
+    private float attackDelta = attackTime;
     private Sound attackSound;
 
     private WorldController worldController;
     private float unitScale = BeneathMain.getScale();
 
-    private static CharacterController INSTANCE;
+    private static CharacterController INSTANCE = new CharacterController();
 
-    private CharacterController(Vector2 position, String url) {
+    private CharacterController() {
+    }
+
+    public static CharacterController getInstance() {
+        return INSTANCE;
+    }
+
+    public void createPlayer(Vector2 position, String url) {
         this.position = new Vector2(position);
         Json json = new Json();
         ObjectMap objectMap = json.fromJson(ObjectMap.class, Gdx.files.internal(url));
@@ -65,7 +72,7 @@ public class CharacterController {
 
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape = boxShape;
-        fixtureDef.density = 1;
+        fixtureDef.density = 0f;
         fixtureDef.friction = 0f;
 
         body.setFixedRotation(true);
@@ -77,16 +84,9 @@ public class CharacterController {
         System.out.println(TAG + "- set Player bit: " + fixtureDef.filter.categoryBits);
     }
 
-    public static CharacterController getInstance(Vector2 position, String url) {
-        if (INSTANCE == null) {
-            INSTANCE = new CharacterController(position, url);
-        }
+    public void restartPlayer(Vector2 position, String url) {
 
-        return INSTANCE;
-    }
 
-    public static CharacterController getInstance() {
-        return INSTANCE;
     }
 
     public void render(SpriteBatch spriteBatch) {
@@ -107,10 +107,12 @@ public class CharacterController {
     }
 
     public Vector2 getVelocity() {
+
         return body.getLinearVelocity();
     }
 
     public void setAttack(boolean bool) {
+
         attack = bool;
     }
 
@@ -137,9 +139,24 @@ public class CharacterController {
     }
 
     public void movePlayer(Vector2 velocity) {
-        body.setLinearVelocity(velocity);
+        Vector2 newVel = new Vector2();
+        newVel.set(velocity.x + 12 * levelMovement, velocity.y);
+
+        OrthographicCamera camera = CameraController.getInstance().getCamera();
+        if (position.x <= (camera.position.x - camera.viewportWidth / 2)) {
+            newVel.set(getVelocity().x + 12 * levelMovement, getVelocity().y);
+        }else if((position.x + sprite.getWidth()) >= (camera.position.x + camera.viewportWidth / 2)) {
+            newVel.set(0, newVel.y );
+        }
+
+        body.setLinearVelocity(newVel);
         position.set(body.getPosition().x - (sprite.getWidth() / 2), body.getPosition().y - (sprite.getHeight() / 2));
         sprite.setPosition(position.x, position.y);
+    }
+
+    public void setLevelMovement(float levelMovement) {
+
+        this.levelMovement = levelMovement;
     }
 
     public void beginContact(Contact contact) {
@@ -147,6 +164,7 @@ public class CharacterController {
     }
 
     public void dispose() {
+        attackSound.dispose();
         texture.dispose();
     }
 }
