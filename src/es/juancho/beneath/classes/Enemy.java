@@ -11,6 +11,8 @@ import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.ObjectMap;
 import es.juancho.beneath.BeneathMain;
+import es.juancho.beneath.controllers.AssetManagerController;
+import es.juancho.beneath.controllers.CameraController;
 import es.juancho.beneath.controllers.LevelController;
 import es.juancho.beneath.controllers.WorldController;
 
@@ -24,26 +26,33 @@ public class Enemy {
 
     private final String TAG = "ENEMY";
 
+    //graphic vars
     private Texture texture;
     private Sprite sprite;
 
+    //physic vars
     private BodyDef bodyDef;
     private Body body;
     private PolygonShape boxShape;
     private short mask = (short) ~CategoryGroup.ENEMY;
     private Vector2 position;
 
+    //movement vars
     private ArrayList<MovePattern> movePattern;
     private Iterator<MovePattern> iterator;
     private MovePattern currentPattern;
     private float patternDelta = 0;
     private float patternTime = 0;
 
-    private float max_health = 20;
-    private float current_healt = max_health;
+    //game-related vars
+    private float max_health;
+    private float current_health = max_health;
     private boolean destroy = false;
     private float MAX_SPEED;
+    private int score;
+    private String type;
 
+    //attack-related vars
     private String bulletJsonString;
     private String enemyJsonString;
     private boolean attack = false;
@@ -52,7 +61,10 @@ public class Enemy {
 
     private float unitScale = BeneathMain.getScale();
 
-
+    /**
+     * @class MovePattern
+     * @desc Pattern of movements
+     */
     private class MovePattern{
         private String direction;
         private float time;
@@ -62,6 +74,10 @@ public class Enemy {
             this.time = time;
         }
 
+        /**
+         * Parses the movement types into a speed Vector
+         * @return velocity Vector2
+         */
         public Vector2 parseMovement() {
             Vector2 velocity = new Vector2();
             if (direction.equals("front")) {
@@ -85,6 +101,7 @@ public class Enemy {
     }
 
     public Enemy(String url, Vector2 position, Array<JsonValue> movePatternsObject) {
+        System.out.println(TAG + "- Creating Enemy in position => " + position);
         movePattern = new ArrayList<MovePattern>();
 
         this.position = new Vector2(position);
@@ -93,15 +110,21 @@ public class Enemy {
         json.addClassTag("enemy", Enemy.class);
         ObjectMap objectMap = json.fromJson(ObjectMap.class, Gdx.files.internal(enemyJsonString));
 
-        for (JsonValue jsonValue : movePatternsObject) {
-            String direction = jsonValue.getString("direction");
-            float time = jsonValue.getFloat("time");
-            movePattern.add(new MovePattern(direction, time));
-            System.out.println(TAG + "- Added Pattern =>" + direction + " " + time);
+        if (movePatternsObject != null) {
+            for (JsonValue jsonValue : movePatternsObject) {
+                String direction = jsonValue.getString("direction");
+                float time = jsonValue.getFloat("time");
+                movePattern.add(new MovePattern(direction, time));
+                System.out.println(TAG + "- Added Pattern =>" + direction + " " + time);
+            }
         }
 
         bulletJsonString = objectMap.get("bullet").toString();
         MAX_SPEED = Float.parseFloat(objectMap.get("speed").toString());
+        score = (int) Float.parseFloat(objectMap.get("score").toString());
+        type = objectMap.get("type").toString();
+        max_health = Float.parseFloat(objectMap.get("health").toString());
+        current_health = max_health;
         System.out.println(TAG + "- Parsed JSON + number of Patterns: " + movePattern.size());
 
         if (!movePattern.isEmpty()) {
@@ -110,7 +133,7 @@ public class Enemy {
             iterator = movePattern.iterator();
         }
 
-        this.texture = new Texture(objectMap.get("texture").toString());
+        this.texture = (Texture) AssetManagerController.getInstance().get(objectMap.get("texture").toString(), Texture.class);
 
         sprite = new Sprite(texture);
 
@@ -139,6 +162,7 @@ public class Enemy {
         body.setUserData(this);
 
         body.createFixture(fixtureDef);
+
     }
 
     public void render(SpriteBatch spriteBatch) {
@@ -154,22 +178,32 @@ public class Enemy {
     }
 
     private void movementHandler() {
-        if (patternDelta < patternTime) {
-            Vector2 velocity = currentPattern.parseMovement();
+        if (!type.equals("boss")) {
+            if (patternDelta < patternTime) {
+                Vector2 velocity = currentPattern.parseMovement();
 
-            body.setLinearVelocity(velocity);
-            position.set(body.getPosition().x - (sprite.getWidth() / 2), body.getPosition().y - (sprite.getHeight() / 2));
-            sprite.setPosition(position.x, position.y);
+                body.setLinearVelocity(velocity);
+                position.set(body.getPosition().x - (sprite.getWidth() / 2), body.getPosition().y - (sprite.getHeight() / 2));
+                sprite.setPosition(position.x, position.y);
+            } else {
+                if (iterator.hasNext()) {
+                    currentPattern = iterator.next();
+                    patternTime = currentPattern.getTime();
+                    patternDelta = 0;
+                } else {
+                    setForDestroy();
+                }
+            }
+            patternDelta += Gdx.graphics.getDeltaTime();
         }else{
-            if (iterator.hasNext()) {
-                currentPattern = iterator.next();
-                patternTime = currentPattern.getTime();
-                patternDelta = 0;
-            }else{
-                setForDestroy();
+            if (position.x <= ((Gdx.graphics.getWidth() / 2) - sprite.getWidth()) + CameraController.getInstance().getCamera().position.x) {
+                Vector2 velocity = new Vector2((12 * LevelController.getLevelMovement()), body.getLinearVelocity().y);
+                body.setLinearVelocity(velocity);
+                position.set(body.getPosition().x - (sprite.getWidth() / 2), body.getPosition().y - (sprite.getHeight() / 2));
+                sprite.setPosition(position.x, position.y);
+                System.out.println(TAG + "- boss in position.");
             }
         }
-        patternDelta += Gdx.graphics.getDeltaTime();
     }
 
     private void attackHandler() {
@@ -184,13 +218,23 @@ public class Enemy {
     }
 
     public void getDamage(float damage) {
-        this.current_healt -= damage;
-        System.out.println(TAG + "-Received damage: " + damage);
+        this.current_health -= damage;
+        System.out.println(TAG + "-Received damage: " + damage + " still: " + current_health);
     }
 
+    public int getScore() {
+        return score;
+    }
+
+
     private void deathHandler() {
-        if (current_healt <= 0) {
+        if (current_health <= 0) {
             destroy = true;
+            LevelController.addScore(score);
+            System.out.println(TAG + "- killed enemy => score: " + score);
+            if (type.equals("boss")) {
+                LevelController.getInstance().setLevelFinished(true);
+            }
         }
     }
 

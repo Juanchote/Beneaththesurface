@@ -19,8 +19,13 @@ public class AssetManagerController {
     public void loadAssets() {
         assetManager.load("data/sounds/music/theme.ogg", Music.class);
         assetManager.load("data/sounds/music/theme_loop.ogg", Music.class);
+        assetManager.load("data/sounds/music/boss.ogg", Music.class);
+        assetManager.load("data/sounds/music/boss_loop.ogg", Music.class);
         assetManager.load("data/sprites/ships/player_basic_ship.png", Texture.class);
+        assetManager.load("data/sprites/ships/enemy_basic_ship.png", Texture.class);
+        assetManager.load("data/sprites/bosses/wormjon.png", Texture.class);
         assetManager.load("data/sounds/lasers/shot1.ogg", Sound.class);
+        assetManager.load("data/sprites/ships/test.png", Texture.class);
     }
 
     public static AssetManagerController getInstance() {

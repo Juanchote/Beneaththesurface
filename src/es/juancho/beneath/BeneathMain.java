@@ -7,7 +7,6 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Timer;
@@ -43,10 +42,10 @@ public class BeneathMain implements ApplicationListener {
 
     float w;
     float h;
-    private Vector2 startingPosition;
     private static float unitScale = 32f;
 
     private boolean once = true;
+    private int SCORE;
 	
 	@Override
 	public void create() {
@@ -104,6 +103,10 @@ public class BeneathMain implements ApplicationListener {
         if (!assetManagerController.update()) {
 
         }else {
+            if (once) {
+                once = false;
+            }
+
             camera.update();
 
             if (debugState) {
@@ -112,18 +115,30 @@ public class BeneathMain implements ApplicationListener {
                 cameraController.shapeRender();
             }
 
+            SCORE = LevelController.getSCORE();
+
             cameraController.cameraControl();
             platformResolver.inputHandler();
             worldController.render();
 
             spriteBatch.begin();
+
             levelController.render(spriteBatch);
             characterController.render(spriteBatch);
             enemyFactory.render(spriteBatch);
             for(Bullet bullet: bullets) {
                 bullet.render(spriteBatch);
             }
+
+            if (levelController.levelFinished()) {
+                bitmapFont.setScale(4);
+                bitmapFont.draw(spriteBatch,"YOU WIN, SCORE: " + SCORE, camera.position.x - (Gdx.graphics.getWidth() / 3), camera.position.y);
+            }else{
+                bitmapFont.setScale(2);
+                bitmapFont.draw(spriteBatch,"SCORE: " + SCORE,camera.position.x - (Gdx.graphics.getWidth() / 2), camera.position.y + (Gdx.graphics.getHeight() / 2) - 50);
+            }
             spriteBatch.end();
+
         }
 	}
 

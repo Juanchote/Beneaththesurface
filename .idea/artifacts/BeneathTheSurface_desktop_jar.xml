@@ -1,0 +1,16 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="BeneathTheSurface-desktop:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/BeneathTheSurface_desktop_jar</output-path>
+    <root id="archive" name="BeneathTheSurface-desktop.jar">
+      <element id="module-output" name="BeneathTheSurface-desktop" />
+      <element id="module-output" name="BeneathTheSurface" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../BeneathTheSurface-desktop/libs/gdx-natives.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../BeneathTheSurface-desktop/libs/gdx-backend-lwjgl.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../BeneathTheSurface-desktop/libs/gdx-backend-lwjgl-natives.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../BeneathTheSurface-desktop/libs/gdx-backend-lwjgl-sources.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/libs/gdx.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/libs/gdx-sources.jar" path-in-jar="/" />
+      <element id="dir-copy" path="$PROJECT_DIR$/../BeneathTheSurface-android/assets" />
+    </root>
+  </artifact>
+</component>

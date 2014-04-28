@@ -46,11 +46,11 @@ public class CameraController {
         camera.position.set(camera.position.x + LevelController.getLevelMovement(), camera.position.y, camera.position.z);
     }
 
-    public Vector2 calculateRelativePosition(Vector2 position) {
+    public Vector2 calculateAbsolutePosition(Vector2 position) {
         Vector2 centerToLeftBottom = new Vector2(camera.position.x - camera.viewportWidth / 2, camera.position.y - camera.viewportHeight / 2);
         System.out.println(TAG + "- centerToLeftBottom => " + centerToLeftBottom);
 
-        return new Vector2(200 + centerToLeftBottom.x + ( position.y * camera.viewportWidth ),centerToLeftBottom.y + ( position.y * camera.viewportHeight ));
+        return new Vector2(200 + centerToLeftBottom.x + ( position.x * camera.viewportWidth ),centerToLeftBottom.y + ( position.y * camera.viewportHeight ));
     }
 
     /**

@@ -53,7 +53,8 @@ public class CharacterController {
         Json json = new Json();
         ObjectMap objectMap = json.fromJson(ObjectMap.class, Gdx.files.internal(url));
         bulletJsonString = objectMap.get("bullet").toString();
-        texture = new Texture(objectMap.get("texture").toString());
+
+        texture = (Texture) AssetManagerController.getInstance().get(objectMap.get("texture").toString(), Texture.class);
 
         sprite = new Sprite(texture);
         sprite.rotate(270);

@@ -25,7 +25,7 @@ public class Bullet {
     private PolygonShape boxShape;
     private final short mask = (short) ~CategoryGroup.BULLET;
 
-    private float lifeTime = 5;
+    private float lifeTime = 1;
     private float deltaTime = 0;
     private boolean setToDestroy = false;
 

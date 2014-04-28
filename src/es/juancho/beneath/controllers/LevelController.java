@@ -20,10 +20,18 @@ public class LevelController {
     private final String TAG = "LEVEL";
     private int number = 0;
 
+    private static int SCORE = 0;
+
     private ArrayList<Music> musics;
     private Music currentMusic;
+
     private String dataJson;
     private String playerData;
+    private String bossData;
+
+    private int bossModeTime;
+    private boolean levelFinished = false;
+
     private Texture textureFirst;
     private Texture textureSecond;
     private Sprite sprite;
@@ -51,6 +59,7 @@ public class LevelController {
 
     public void startLevel(String url) {
         System.out.println(TAG + "- starting level..");
+        SCORE = 0;
         dataJson = url;
 
         Json json = new Json();
@@ -60,6 +69,8 @@ public class LevelController {
         number = (int) Float.parseFloat(objectMap.get("number").toString());
         textureFirst = new Texture(Gdx.files.internal(objectMap.get("background").toString()));
         playerData = objectMap.get("player").toString();
+        bossData = objectMap.get("boss").toString();
+        bossModeTime = (int) Float.parseFloat(objectMap.get("bossModeTime").toString());
         Array<JsonValue> enemyPatterns = (Array) objectMap.get("enemyPatterns");
 
         textureSecond = textureFirst;
@@ -85,11 +96,18 @@ public class LevelController {
             currentMusic.stop();
         }
 
-        playTheme();
+        playTheme(0);
 
         for (JsonValue enemyPattern : enemyPatterns) {
             enemyFactory.createPattern(enemyPattern.getString("enemyPattern"), enemyPattern.getInt("time"), enemyPattern.getString("enemy"), new Vector2(enemyPattern.getFloat("x"), enemyPattern.getFloat("y")));
         }
+
+        Timer.instance().scheduleTask(new Timer.Task() {
+            @Override
+            public void run() {
+                setBossMode();
+            }
+        },bossModeTime);
     }
 
     public void restartLevel() throws ScriptException {
@@ -99,19 +117,19 @@ public class LevelController {
         startLevel(dataJson);
     }
 
-    public void playTheme() {
+    public void playTheme(final int index) {
         Timer timer = Timer.instance();
 
         if(!currentMusic.isPlaying()) {
             timer.scheduleTask(new Timer.Task() {
                 @Override
                 public void run() {
-                    currentMusic = musics.get(0);
+                    currentMusic = musics.get(index);
                     currentMusic.play();
                     currentMusic.setOnCompletionListener(new Music.OnCompletionListener() {
                         @Override
                         public void onCompletion(Music music) {
-                            currentMusic = musics.get(1);
+                            currentMusic = musics.get(index + 1);
                             currentMusic.setLooping(true);
                             currentMusic.play();
                         }
@@ -119,6 +137,14 @@ public class LevelController {
                 }
             }, 0);
         }
+    }
+
+    public void setBossMode() {
+        EnemyFactory.getInstance().createEnemy(bossData, new Vector2(1,0), null);
+        if (currentMusic.isPlaying()) {
+            currentMusic.stop();
+        }
+        playTheme(2);
     }
 
     public void render(SpriteBatch spriteBatch) {
@@ -141,11 +167,27 @@ public class LevelController {
         textureSecond.dispose();
     }
 
+    public void setLevelFinished(boolean finished) {
+        levelFinished = finished;
+    }
+
+    public boolean levelFinished() {
+        return levelFinished ;
+    }
+
     public static float getLevelMovement() {
         return levelMovement;
     }
 
     public static LevelController getInstance() {
         return INSTANCE;
+    }
+
+    public static void addScore(int points) {
+        SCORE += points;
+    }
+
+    public static int getSCORE() {
+        return SCORE;
     }
 }

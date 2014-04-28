@@ -34,7 +34,7 @@ public class EnemyFactory {
         float count = Float.parseFloat(objectMap.get("count").toString());
         float interval = Float.parseFloat(objectMap.get("interval").toString());
         final Array<JsonValue> movePatternsObject = (Array) objectMap.get("movePatterns");
-        System.out.println(TAG + "- parsed Json => count: " + count-- + " interval: " + interval);
+        System.out.println(TAG + "- parsed Json => count: " + count-- + " interval: " + interval + " position: " + position);
 
         Timer timer = Timer.instance();
         timer.scheduleTask(new Timer.Task() {
@@ -46,7 +46,7 @@ public class EnemyFactory {
     }
 
     public void createEnemy(String url, Vector2 position, Array<JsonValue> movePatternsObject) {
-        Enemy enemy = new Enemy(url, CameraController.getInstance().calculateRelativePosition(position), movePatternsObject);
+        Enemy enemy = new Enemy(url, CameraController.getInstance().calculateAbsolutePosition(position), movePatternsObject);
         enemies.add(enemy);
         System.out.println(TAG + "- enemy created. total => " + enemies.size());
     }
